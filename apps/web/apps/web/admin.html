@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>後台｜活動內容設定</title>
+    <link rel="stylesheet" href="/assets/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <h2>後台：活動內容設定</h2>
+        <p class="small">目前先用瀏覽器本機儲存（localStorage）。之後會改成 Firebase，讓所有人同步。</p>
+
+        <form id="adminForm">
+          <div class="row">
+            <label>活動標題</label>
+            <input id="title" />
+          </div>
+          <div class="row">
+            <label>副標題</label>
+            <input id="subtitle" />
+          </div>
+          <div class="row">
+            <label>時間</label>
+            <input id="datetime" />
+          </div>
+          <div class="row">
+            <label>地點</label>
+            <input id="location" />
+          </div>
+          <div class="row">
+            <label>注意事項</label>
+            <textarea id="notice"></textarea>
+          </div>
+
+          <button class="btn" type="submit">儲存</button>
+          <span id="msg" style="margin-left:10px;"></span>
+        </form>
+
+        <div class="nav" style="margin-top:16px;">
+          <a class="link" href="/">回首頁看效果</a>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { renderAdmin } from "/assets/app.js";
+      renderAdmin();
+    </script>
+  </body>
+</html>

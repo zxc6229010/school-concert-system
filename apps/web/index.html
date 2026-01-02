@@ -2,10 +2,18 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>校園演唱會系統</title>
+    <link rel="stylesheet" href="/assets/style.css" />
   </head>
   <body>
-    <h1>校園演唱會報名暨入場系統</h1>
-    <p>如果你看到這行，代表成功了 🎉</p>
+    <div class="container">
+      <div id="event"></div>
+    </div>
+
+    <script type="module">
+      import { renderHome } from "/assets/app.js";
+      renderHome();
+    </script>
   </body>
 </html>
