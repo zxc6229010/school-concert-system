@@ -3,16 +3,17 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>後台登入</title>
+    <title>後台管理</title>
   </head>
   <body>
-    <h1>後台登入</h1>
+    <h1>後台管理</h1>
 
     <button id="loginBtn">使用 Google 登入</button>
     <button id="logoutBtn" style="display:none;">登出</button>
 
-    <p id="status" style="margin-top:12px;color:#666;"></p>
-    <pre id="info" style="background:#f3f4f6;padding:12px;border-radius:12px;"></pre>
+    <p id="status"></p>
+
+    <pre id="eventData" style="background:#f3f4f6;padding:12px;"></pre>
 
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -23,8 +24,12 @@
         signOut,
         onAuthStateChanged
       } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+      import {
+        getFirestore,
+        doc,
+        getDoc
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-      // 🔁 貼你的 firebaseConfig
       const firebaseConfig = {
   apiKey: "AIzaSyDu4_bW4_5Sq9ZLESIvBQGWPADak7rDlV4",
   authDomain: "concert-31d86.firebaseapp.com",
@@ -37,45 +42,48 @@
 
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
+      const db = getFirestore(app);
 
       const loginBtn = document.getElementById("loginBtn");
       const logoutBtn = document.getElementById("logoutBtn");
       const statusEl = document.getElementById("status");
-      const infoEl = document.getElementById("info");
+      const eventEl = document.getElementById("eventData");
 
       loginBtn.onclick = async () => {
-        statusEl.textContent = "登入中…";
-        try {
-          const provider = new GoogleAuthProvider();
-          await signInWithPopup(auth, provider);
-        } catch (e) {
-          console.error(e);
-          statusEl.textContent = "登入失敗（看 Console）";
-        }
+        await signInWithPopup(auth, new GoogleAuthProvider());
       };
-
       logoutBtn.onclick = async () => {
         await signOut(auth);
       };
 
-      onAuthStateChanged(auth, (user) => {
+      onAuthStateChanged(auth, async (user) => {
         if (!user) {
           loginBtn.style.display = "";
           logoutBtn.style.display = "none";
           statusEl.textContent = "尚未登入";
-          infoEl.textContent = "";
+          eventEl.textContent = "";
           return;
         }
 
         loginBtn.style.display = "none";
         logoutBtn.style.display = "";
-        statusEl.textContent = "已登入 ✅";
+        statusEl.textContent = "已登入，讀取活動資料中…";
 
-        infoEl.textContent =
-          `UID: ${user.uid}\n` +
-          `Name: ${user.displayName ?? ""}\n` +
-          `Email: ${user.email ?? ""}\n\n` +
-          `請把 UID 複製到 Firestore 的 users/{UID} 文件中，設 role = "superAdmin"`;
+        try {
+          const ref = doc(db, "eventConfig", "current");
+          const snap = await getDoc(ref);
+
+          if (!snap.exists()) {
+            eventEl.textContent = "找不到 eventConfig/current";
+            return;
+          }
+
+          eventEl.textContent = JSON.stringify(snap.data(), null, 2);
+          statusEl.textContent = "讀取成功（你有權限） ✅";
+        } catch (e) {
+          console.error(e);
+          statusEl.textContent = "讀取失敗（看 Console）";
+        }
       });
     </script>
   </body>
