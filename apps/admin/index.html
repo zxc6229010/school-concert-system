@@ -96,7 +96,10 @@
         <label>注意事項</label>
         <textarea id="notice"></textarea>
 
-        <p class="hint">※ 目前為讀取測試階段，尚未儲存</p>
+        <div style="display:flex; gap:10px; align-items:center; margin-top:12px;">
+  <button type="button" id="saveBtn" class="primary" disabled>儲存</button>
+  <span class="hint" id="saveHint">※ 修改後按儲存，學生頁面會即時更新</span>
+</div>
       </form>
 
       <p id="status">載入中…</p>
@@ -112,10 +115,12 @@
         onAuthStateChanged
       } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
       import {
-        getFirestore,
-        doc,
-        getDoc
-      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
       const firebaseConfig = {
   apiKey: "AIzaSyDu4_bW4_5Sq9ZLESIvBQGWPADak7rDlV4",
@@ -133,6 +138,9 @@
 
       const statusEl = document.getElementById("status");
       const logoutBtn = document.getElementById("logoutBtn");
+      const saveBtn = document.getElementById("saveBtn");
+const saveHint = document.getElementById("saveHint");
+const eventRef = doc(db, "eventConfig", "current");
 
       logoutBtn.onclick = () => signOut(auth);
 
@@ -163,11 +171,42 @@
           document.getElementById("notice").value = data.notice ?? "";
 
           statusEl.textContent = "已載入（尚未儲存）";
+          saveBtn.disabled = false;
+saveHint.textContent = "※ 修改後按儲存，學生頁面會即時更新";
         } catch (e) {
           console.error(e);
           statusEl.textContent = "讀取失敗（請看 Console）";
         }
       });
     </script>
+    saveBtn.onclick = async () => {
+  saveBtn.disabled = true;
+  saveHint.textContent = "儲存中…";
+  statusEl.textContent = "儲存中…";
+
+  try {
+    await setDoc(
+      eventRef,
+      {
+        title: document.getElementById("title").value.trim(),
+        subtitle: document.getElementById("subtitle").value.trim(),
+        datetime: document.getElementById("datetime").value.trim(),
+        location: document.getElementById("location").value.trim(),
+        notice: document.getElementById("notice").value.trim(),
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    statusEl.textContent = "儲存成功 ✅";
+    saveHint.textContent = "已儲存。你可以打開學生頁面確認已更新。";
+  } catch (e) {
+    console.error(e);
+    statusEl.textContent = "儲存失敗（請看 Console）";
+    saveHint.textContent = "儲存失敗：請確認你是 superAdmin 且 Rules 已發布。";
+  } finally {
+    saveBtn.disabled = false;
+  }
+};
   </body>
 </html>
