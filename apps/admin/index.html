@@ -178,8 +178,7 @@ saveHint.textContent = "※ 修改後按儲存，學生頁面會即時更新";
           statusEl.textContent = "讀取失敗（請看 Console）";
         }
       });
-    </script>
-    saveBtn.onclick = async () => {
+      saveBtn.onclick = async () => {
   saveBtn.disabled = true;
   saveHint.textContent = "儲存中…";
   statusEl.textContent = "儲存中…";
@@ -208,5 +207,6 @@ saveHint.textContent = "※ 修改後按儲存，學生頁面會即時更新";
     saveBtn.disabled = false;
   }
 };
+    </script>
   </body>
 </html>
