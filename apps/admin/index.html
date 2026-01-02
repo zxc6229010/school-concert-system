@@ -3,9 +3,80 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Admin</title>
+    <title>後台登入</title>
   </head>
   <body>
-    <h1>Admin 站啟用</h1>
+    <h1>後台登入</h1>
+
+    <button id="loginBtn">使用 Google 登入</button>
+    <button id="logoutBtn" style="display:none;">登出</button>
+
+    <p id="status" style="margin-top:12px;color:#666;"></p>
+    <pre id="info" style="background:#f3f4f6;padding:12px;border-radius:12px;"></pre>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import {
+        getAuth,
+        GoogleAuthProvider,
+        signInWithPopup,
+        signOut,
+        onAuthStateChanged
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+      // 🔁 貼你的 firebaseConfig
+      const firebaseConfig = {
+  apiKey: "AIzaSyDu4_bW4_5Sq9ZLESIvBQGWPADak7rDlV4",
+  authDomain: "concert-31d86.firebaseapp.com",
+  projectId: "concert-31d86",
+  storageBucket: "concert-31d86.firebasestorage.app",
+  messagingSenderId: "996102236874",
+  appId: "1:996102236874:web:ec371def118a438708e233",
+  measurementId: "G-W90F86QPJZ"
+};
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+
+      const loginBtn = document.getElementById("loginBtn");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const statusEl = document.getElementById("status");
+      const infoEl = document.getElementById("info");
+
+      loginBtn.onclick = async () => {
+        statusEl.textContent = "登入中…";
+        try {
+          const provider = new GoogleAuthProvider();
+          await signInWithPopup(auth, provider);
+        } catch (e) {
+          console.error(e);
+          statusEl.textContent = "登入失敗（看 Console）";
+        }
+      };
+
+      logoutBtn.onclick = async () => {
+        await signOut(auth);
+      };
+
+      onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          loginBtn.style.display = "";
+          logoutBtn.style.display = "none";
+          statusEl.textContent = "尚未登入";
+          infoEl.textContent = "";
+          return;
+        }
+
+        loginBtn.style.display = "none";
+        logoutBtn.style.display = "";
+        statusEl.textContent = "已登入 ✅";
+
+        infoEl.textContent =
+          `UID: ${user.uid}\n` +
+          `Name: ${user.displayName ?? ""}\n` +
+          `Email: ${user.email ?? ""}\n\n` +
+          `請把 UID 複製到 Firestore 的 users/{UID} 文件中，設 role = "superAdmin"`;
+      });
+    </script>
   </body>
 </html>
