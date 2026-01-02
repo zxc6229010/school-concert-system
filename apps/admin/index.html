@@ -3,17 +3,104 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>後台管理</title>
+    <title>活動設定（後台）</title>
+
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        background: #f7f7f8;
+        margin: 0;
+        padding: 24px;
+      }
+      .container {
+        max-width: 720px;
+        margin: auto;
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+      }
+      h1 {
+        margin-top: 0;
+      }
+      label {
+        display: block;
+        font-weight: 600;
+        margin-top: 16px;
+        margin-bottom: 4px;
+      }
+      input,
+      textarea {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border-radius: 8px;
+        border: 1px solid #d0d0d5;
+        box-sizing: border-box;
+      }
+      textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+      .hint {
+        font-size: 13px;
+        color: #666;
+        margin-top: 4px;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      button {
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        background: #fff;
+        cursor: pointer;
+      }
+      button.primary {
+        background: #306fdb;
+        color: white;
+        border: none;
+      }
+      #status {
+        margin-top: 16px;
+        color: #555;
+      }
+    </style>
   </head>
+
   <body>
-    <h1>後台管理</h1>
+    <div class="container">
+      <div class="topbar">
+        <h1>活動設定</h1>
+        <button id="logoutBtn">登出</button>
+      </div>
 
-    <button id="loginBtn">使用 Google 登入</button>
-    <button id="logoutBtn" style="display:none;">登出</button>
+      <form id="eventForm">
+        <label>活動標題</label>
+        <input id="title" />
 
-    <p id="status"></p>
+        <label>副標題</label>
+        <input id="subtitle" />
 
-    <pre id="eventData" style="background:#f3f4f6;padding:12px;"></pre>
+        <label>活動時間</label>
+        <input id="datetime" placeholder="例如：2026/03/20（五）18:30" />
+
+        <label>活動地點</label>
+        <input id="location" />
+
+        <label>注意事項</label>
+        <textarea id="notice"></textarea>
+
+        <p class="hint">※ 目前為讀取測試階段，尚未儲存</p>
+      </form>
+
+      <p id="status">載入中…</p>
+    </div>
 
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -44,45 +131,41 @@
       const auth = getAuth(app);
       const db = getFirestore(app);
 
-      const loginBtn = document.getElementById("loginBtn");
-      const logoutBtn = document.getElementById("logoutBtn");
       const statusEl = document.getElementById("status");
-      const eventEl = document.getElementById("eventData");
+      const logoutBtn = document.getElementById("logoutBtn");
 
-      loginBtn.onclick = async () => {
-        await signInWithPopup(auth, new GoogleAuthProvider());
-      };
-      logoutBtn.onclick = async () => {
-        await signOut(auth);
-      };
+      logoutBtn.onclick = () => signOut(auth);
 
       onAuthStateChanged(auth, async (user) => {
         if (!user) {
-          loginBtn.style.display = "";
-          logoutBtn.style.display = "none";
-          statusEl.textContent = "尚未登入";
-          eventEl.textContent = "";
+          statusEl.textContent = "請先登入";
+          await signInWithPopup(auth, new GoogleAuthProvider());
           return;
         }
 
-        loginBtn.style.display = "none";
-        logoutBtn.style.display = "";
-        statusEl.textContent = "已登入，讀取活動資料中…";
+        statusEl.textContent = "讀取活動資料中…";
 
         try {
           const ref = doc(db, "eventConfig", "current");
           const snap = await getDoc(ref);
 
           if (!snap.exists()) {
-            eventEl.textContent = "找不到 eventConfig/current";
+            statusEl.textContent = "找不到活動資料";
             return;
           }
 
-          eventEl.textContent = JSON.stringify(snap.data(), null, 2);
-          statusEl.textContent = "讀取成功（你有權限） ✅";
+          const data = snap.data();
+
+          document.getElementById("title").value = data.title ?? "";
+          document.getElementById("subtitle").value = data.subtitle ?? "";
+          document.getElementById("datetime").value = data.datetime ?? "";
+          document.getElementById("location").value = data.location ?? "";
+          document.getElementById("notice").value = data.notice ?? "";
+
+          statusEl.textContent = "已載入（尚未儲存）";
         } catch (e) {
           console.error(e);
-          statusEl.textContent = "讀取失敗（看 Console）";
+          statusEl.textContent = "讀取失敗（請看 Console）";
         }
       });
     </script>
